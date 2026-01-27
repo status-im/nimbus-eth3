@@ -42,8 +42,6 @@ const
 type
   Eth1Network* = enum
     mainnet
-    sepolia
-    hoodi
 
   GenesisMetadataKind* = enum
     NoGenesis
@@ -200,53 +198,7 @@ proc loadCompileTimeNetworkMetadata(
   else:
     macros.error "config.yaml not found for network '" & path
 
-when IsGnosisSupported:
-  when incbinEnabled:
-    let
-      gnosisGenesisVar {.importc: "gnosis_mainnet_genesis".}: ptr UncheckedArray[byte]
-      gnosisGenesisSizeVar {.importc: "gnosis_mainnet_genesis_size".}: int
-
-      chiadoGenesisVar {.importc: "gnosis_chiado_genesis".}: ptr UncheckedArray[byte]
-      chiadoGenesisSizeVar {.importc: "gnosis_chiado_genesis_size".}: int
-
-    template gnosisGenesis*(): ptr UncheckedArray[byte] = {.noSideEffect.}: gnosisGenesisVar
-    template gnosisGenesisSize*(): int = {.noSideEffect.}: gnosisGenesisSizeVar
-
-    template chiadoGenesis*(): ptr UncheckedArray[byte] = {.noSideEffect.}: chiadoGenesisVar
-    template chiadoGenesisSize*(): int = {.noSideEffect.}: chiadoGenesisSizeVar
-
-    # let `.incbin` in assembly file find the binary file through search path
-    {.passc: "-I" & escape(vendorDir).}
-    {.compile: "network_metadata_gnosis.S".}
-
-  else:
-    const
-      gnosisGenesis* = slurp(
-        vendorDir & "/gnosis-chain-configs/mainnet/genesis.ssz")
-
-      chiadoGenesis* = slurp(
-        vendorDir & "/gnosis-chain-configs/chiado/genesis.ssz")
-
-  const
-    gnosisMetadata = loadCompileTimeNetworkMetadata(
-      vendorDir & "/gnosis-chain-configs/mainnet",
-      Opt.none(Eth1Network),
-      useBakedInGenesis = Opt.some "gnosis")
-
-    chiadoMetadata = loadCompileTimeNetworkMetadata(
-      vendorDir & "/gnosis-chain-configs/chiado",
-      Opt.none(Eth1Network),
-      useBakedInGenesis = Opt.some "chiado")
-
-  static:
-    for network in [gnosisMetadata, chiadoMetadata]:
-      checkForkConsistency(network.cfg)
-      doAssert network.cfg.ELECTRA_FORK_EPOCH < FAR_FUTURE_EPOCH
-      doAssert network.cfg.FULU_FORK_EPOCH == FAR_FUTURE_EPOCH
-      doAssert network.cfg.GLOAS_FORK_EPOCH == FAR_FUTURE_EPOCH
-      doAssert ConsensusFork.high == ConsensusFork.Gloas
-
-elif IsMainnetSupported:
+when IsMainnetSupported:
   when incbinEnabled:
     # Nim is very inefficent at loading large constants from binary files so we
     # use this trick instead which saves significant amounts of compile time
@@ -254,16 +206,10 @@ elif IsMainnetSupported:
     let
       mainnetGenesisVar {.importc: "eth2_mainnet_genesis".}: ptr UncheckedArray[byte]
       mainnetGenesisSizeVar {.importc: "eth2_mainnet_genesis_size".}: int
-
-      sepoliaGenesisVar {.importc: "eth2_sepolia_genesis".}: ptr UncheckedArray[byte]
-      sepoliaGenesisSizeVar {.importc: "eth2_sepolia_genesis_size".}: int
     {.pop.}
 
     template mainnetGenesis*(): ptr UncheckedArray[byte] = {.noSideEffect.}: mainnetGenesisVar
     template mainnetGenesisSize*: int = {.noSideEffect.}: mainnetGenesisSizeVar
-
-    template sepoliaGenesis*(): ptr UncheckedArray[byte] = {.noSideEffect.}: sepoliaGenesisVar
-    template sepoliaGenesisSize*(): int = {.noSideEffect.}: sepoliaGenesisSizeVar
 
     # let `.incbin` in assembly file find the binary file through search path
     {.passc: "-I" & escape(vendorDir).}
@@ -274,50 +220,15 @@ elif IsMainnetSupported:
       mainnetGenesis* = slurp(
         vendorDir & "/mainnet/metadata/genesis.ssz")
 
-      sepoliaGenesis* = slurp(
-        vendorDir & "/sepolia/metadata/genesis.ssz")
-
   const
     mainnetMetadata = loadCompileTimeNetworkMetadata(
       vendorDir & "/mainnet/metadata",
       Opt.some mainnet,
       useBakedInGenesis = Opt.some "mainnet")
 
-    sepoliaMetadata = loadCompileTimeNetworkMetadata(
-      vendorDir & "/sepolia/metadata",
-      Opt.some sepolia,
-      useBakedInGenesis = Opt.some "sepolia")
-
-    # File can be reproduced by `cd vendor/hoodi`, then `git lfs install` and
-    # `git lfs pull`, and then from repo root:
-    #
-    # let
-    #   orig = io2.readAllBytes("./vendor/hoodi/metadata/genesis.ssz").get
-    #   enc = encodeFramed(orig)
-    # discard secureWriteFile("hoodi-genesis.ssz.sz", enc)
-    # let
-    #   dec = io2.readAllBytes("hoodi-genesis.ssz.sz").get
-    #   res = decodeFramed(dec)
-    #   state = newClone(readSszForkedHashedBeaconState(
-    #     getMetadataForNetwork("hoodi").cfg, res))
-    # withState(state[]):
-    #   echo $forkyState.root
-    #
-    # Uploading as release is recommended according to guidance from Github:
-    # > We don't limit the total size of the binary files in the release or the
-    #   bandwidth used to deliver them. However, each individual file must be
-    #   smaller than 2 GiB.
-    # - https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github#distributing-large-binaries
-    hoodiMetadata = loadCompileTimeNetworkMetadata(
-      vendorDir & "/hoodi/metadata",
-      Opt.some hoodi,
-      downloadGenesisFrom = Opt.some DownloadInfo(
-        url: "https://github.com/eth-clients/hoodi/releases/download/genesis/hoodi-genesis.ssz.sz",
-        digest: Eth2Digest.fromHex "0x2683ebc120f91f740c7bed4c866672d01e1ba51b4cc360297138465ee5df40f0"))
-
   static:
     doAssert ConsensusFork.high == ConsensusFork.Gloas
-    for network in [mainnetMetadata, sepoliaMetadata, hoodiMetadata]:
+    for network in [mainnetMetadata]:
       checkForkConsistency(network.cfg)
       doAssert network.cfg.FULU_FORK_EPOCH < FAR_FUTURE_EPOCH
       doAssert network.cfg.GLOAS_FORK_EPOCH == FAR_FUTURE_EPOCH
@@ -342,34 +253,13 @@ proc getMetadataForNetwork*(networkName: string): Eth2NetworkMetadata =
       fatal "config.yaml not found for network", networkName
       quit 1
 
-  if networkName == "holesky":
-    warn "https://blog.ethereum.org/2025/09/01/holesky-shutdown-announcement suggests migrating to Hoodi or Sepolia"
-
   let metadata =
-    when IsGnosisSupported:
-      case toLowerAscii(networkName)
-      of "gnosis":
-        gnosisMetadata
-      of "gnosis-chain":
-        warn "`--network:gnosis-chain` is deprecated, " &
-          "use `--network:gnosis` instead"
-        gnosisMetadata
-      of "chiado":
-        chiadoMetadata
-      else:
-        loadRuntimeMetadata()
-
-    elif IsMainnetSupported:
+    when IsMainnetSupported:
       case toLowerAscii(networkName)
       of "mainnet":
         mainnetMetadata
-      of "hoodi":
-        hoodiMetadata
-      of "sepolia":
-        sepoliaMetadata
       else:
         loadRuntimeMetadata()
-
     else:
       loadRuntimeMetadata()
 
@@ -390,8 +280,6 @@ proc getRuntimeConfig*(eth2Network: Option[string]): RuntimeConfig =
     else:
       when IsMainnetSupported:
         mainnetMetadata
-      elif IsGnosisSupported:
-        gnosisMetadata
       else:
         # This is a non-standard build (i.e. minimal), and the function was
         # most likely executed in a test. The best we can do is return a fully
@@ -400,7 +288,7 @@ proc getRuntimeConfig*(eth2Network: Option[string]): RuntimeConfig =
 
   metadata.cfg
 
-when IsMainnetSupported or IsGnosisSupported:
+when IsMainnetSupported:
   template bakedInGenesisStateAsBytes(networkName: untyped): untyped =
     when incbinEnabled:
       `networkName Genesis`.toOpenArray(0, `networkName GenesisSize` - 1)
@@ -412,10 +300,6 @@ when IsMainnetSupported or IsGnosisSupported:
       "Baked-in genesis states for the official Ethereum " &
       "networks are available only in the mainnet build of Nimbus"
 
-    availableOnlyInGnosisBuild =
-      "Baked-in genesis states for the Gnosis network " &
-      "are available only in the gnosis build of Nimbus"
-
   template bakedBytes*(metadata: GenesisMetadata): auto =
     case metadata.networkName
     of "mainnet":
@@ -423,21 +307,6 @@ when IsMainnetSupported or IsGnosisSupported:
         bakedInGenesisStateAsBytes mainnet
       else:
         raiseAssert availableOnlyInMainnetBuild
-    of "sepolia":
-      when IsMainnetSupported:
-        bakedInGenesisStateAsBytes sepolia
-      else:
-        raiseAssert availableOnlyInMainnetBuild
-    of "gnosis":
-      when IsGnosisSupported:
-        bakedInGenesisStateAsBytes gnosis
-      else:
-        raiseAssert availableOnlyInGnosisBuild
-    of "chiado":
-      when IsGnosisSupported:
-        bakedInGenesisStateAsBytes chiado
-      else:
-        raiseAssert availableOnlyInGnosisBuild
     else:
       raiseAssert "The baked network metadata should use one of the name above"
 

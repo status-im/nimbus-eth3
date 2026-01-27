@@ -75,10 +75,3 @@ proc sourceDesc*(metadata: GenesisMetadata): string =
     metadata.url
   of UserSuppliedFile:
     metadata.path
-
-when isMainModule:
-  let hoodiMetadata = getMetadataForNetwork("hoodi")
-  io2.writeFile(
-    "hoodi-genesis.ssz",
-    waitFor hoodiMetadata.fetchGenesisBytes()
-  ).expect("success")

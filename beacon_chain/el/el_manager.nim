@@ -1143,8 +1143,6 @@ proc checkChainIdWithSingleEL(
         # https://chainid.network/
         expectedChain = case m.eth1Network.get
           of mainnet: 1.u256
-          of sepolia: 11155111.u256
-          of hoodi: 560048.u256
       if expectedChain != providerChain:
         warn "The specified EL client is connected to a different chain",
               url = connection.engineUrl,

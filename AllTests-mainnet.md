@@ -826,7 +826,6 @@ AllTests-mainnet
 ## Network metadata
 ```diff
 + mainnet                                                                                    OK
-+ sepolia                                                                                    OK
 ```
 ## Nimbus remote signer/signing test (verifying-web3signer)
 ```diff

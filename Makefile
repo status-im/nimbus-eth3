@@ -28,9 +28,6 @@ BASE_METRICS_PORT := 8008
 # WARNING: Use lazy assignment to allow CI to override.
 EXECUTOR_NUMBER ?= 0
 
-SEPOLIA_WEB3_URL := "--web3-url=https://rpc.sepolia.dev --web3-url=https://www.sepoliarpc.space"
-GNOSIS_WEB3_URLS := "--web3-url=https://rpc.gnosischain.com/"
-
 VALIDATORS := 1
 CPU_LIMIT := 0
 BUILD_END_MSG := "\\x1B[92mBuild completed successfully:\\x1B[39m"
@@ -105,14 +102,7 @@ TOOLS_CSV := $(subst $(SPACE),$(COMMA),$(TOOLS))
 # TODO: Add the installer packages here
 PLATFORM_SPECIFIC_TARGETS :=
 
-# TODO Fix the gnosis build on Windows
-ifneq ($(OS), Windows_NT)
-PLATFORM_SPECIFIC_TARGETS += gnosis-build
-endif
-
-# We don't need these `vendor/hoodi` files but
-# fetching them may trigger 'This repository is over its data quota' from GitHub
-#
+# Avoid fetching large LFS blobs unless explicitly requested.
 # MSYS_NO_PATHCONV=1: On Windows MSYS2, 1st path gets mangled without this flag!
 GIT_SUBMODULE_ENV := MSYS_NO_PATHCONV=1
 GIT_SUBMODULE_CONFIG := -c lfs.fetchexclude=/public-keys/all.txt,/metadata/genesis.ssz,/parsed/parsedConsensusGenesis.json
@@ -123,15 +113,6 @@ ifeq ($(NIM_PARAMS),)
 # The `git reset ...` will try to fix a `make update` that was interrupted
 # with Ctrl+C after deleting the working copy and before getting a chance to
 # restore it in $(BUILD_SYSTEM_DIR).
-
-# `vendor/hoodi` requires Git LFS
-ifeq (, $(shell which git-lfs))
-ifeq ($(shell uname), Darwin)
-$(error Git LFS not installed. Run 'brew install git-lfs' to set up)
-else
-$(error Git LFS not installed)
-endif
-endif
 
 GIT_SUBMODULE_UPDATE := $(GIT_SUBMODULE_ENV) git $(GIT_SUBMODULE_CONFIG) submodule update --init --recursive
 .DEFAULT:
@@ -480,14 +461,8 @@ $(filter-out $(TOOLS_CORE_CUSTOMCOMPILE),$(TOOLS)): | build deps
 # remains unusable for this Makefile due to requiring GNU Make 4.4.
 ifneq (,$(filter all,$(MAKECMDGOALS)))
 FORCE_BUILD_ALONE_TOOLS_DEPS := $(TOOLS_CORE)
-
-# If this isn't an included target (such as Windows), this is a no-op)
-gnosis-build: | nimbus_beacon_node
 else ifeq (,$(MAKECMDGOALS))
 FORCE_BUILD_ALONE_TOOLS_DEPS := $(TOOLS_CORE)
-
-# If this isn't an included target (such as Windows), this is a no-op)
-gnosis-build: | nimbus_beacon_node
 else
 FORCE_BUILD_ALONE_TOOLS_DEPS :=
 endif
@@ -587,84 +562,6 @@ endef
 ###
 ### Sepolia
 ###
-sepolia-build: | nimbus_beacon_node nimbus_signing_node
-
-# https://www.gnu.org/software/make/manual/html_node/Call-Function.html#Call-Function
-sepolia: | sepolia-build
-	$(call CONNECT_TO_NETWORK,sepolia,nimbus_beacon_node,$(SEPOLIA_WEB3_URL))
-
-sepolia-vc: | sepolia-build nimbus_validator_client
-	$(call CONNECT_TO_NETWORK_WITH_VALIDATOR_CLIENT,sepolia,nimbus_beacon_node,$(SEPOLIA_WEB3_URL))
-
-sepolia-lc: | nimbus_light_client
-	$(call CONNECT_TO_NETWORK_WITH_LIGHT_CLIENT,sepolia)
-
-ifneq ($(LOG_LEVEL), TRACE)
-sepolia-dev:
-	+ "$(MAKE)" LOG_LEVEL=TRACE $@
-else
-sepolia-dev: | sepolia-build
-	$(call CONNECT_TO_NETWORK_IN_DEV_MODE,sepolia,nimbus_beacon_node,$(SEPOLIA_WEB3_URL))
-endif
-
-clean-sepolia:
-	$(call CLEAN_NETWORK,sepolia)
-
-###
-### Gnosis chain binary
-###
-
-gnosis-build gnosis-chain-build: | build deps
-	+ echo -e $(BUILD_MSG) "build/nimbus_beacon_node_gnosis" && \
-		MAKE="$(MAKE)" V="$(V)" $(ENV_SCRIPT) scripts/compile_nim_program.sh \
-			nimbus_beacon_node_gnosis \
-			beacon_chain/nimbus_beacon_node.nim \
-			$(NIM_PARAMS) \
-			-d:const_preset=gnosis \
-			&& \
-		echo -e $(BUILD_END_MSG) "build/nimbus_beacon_node_gnosis"
-
-gnosis-vc-build: | build deps
-	+ echo -e $(BUILD_MSG) "build/nimbus_validator_client_gnosis" && \
-		MAKE="$(MAKE)" V="$(V)" $(ENV_SCRIPT) scripts/compile_nim_program.sh \
-			nimbus_validator_client_gnosis \
-			beacon_chain/nimbus_validator_client.nim \
-			$(NIM_PARAMS) \
-			-d:const_preset=gnosis \
-			&& \
-		echo -e $(BUILD_END_MSG) "build/nimbus_validator_client_gnosis"
-
-gnosis: | gnosis-build
-	$(call CONNECT_TO_NETWORK,gnosis,nimbus_beacon_node_gnosis,$(GNOSIS_WEB3_URLS))
-
-ifneq ($(LOG_LEVEL), TRACE)
-gnosis-dev:
-	+ "$(MAKE)" --no-print-directory LOG_LEVEL=TRACE $@
-else
-gnosis-dev: | gnosis-build
-	$(call CONNECT_TO_NETWORK_IN_DEV_MODE,gnosis,nimbus_beacon_node_gnosis,$(GNOSIS_WEB3_URLS))
-endif
-
-clean-gnosis:
-	$(call CLEAN_NETWORK,gnosis)
-
-# v22.3 names
-gnosis-chain: | gnosis-build
-	echo `gnosis-chain` is deprecated, use `gnosis` after migrating data folder
-	$(call CONNECT_TO_NETWORK,gnosis-chain,nimbus_beacon_node_gnosis,$(GNOSIS_WEB3_URLS))
-
-ifneq ($(LOG_LEVEL), TRACE)
-gnosis-chain-dev:
-	+ "$(MAKE)" --no-print-directory LOG_LEVEL=TRACE $@
-else
-gnosis-chain-dev: | gnosis-build
-	echo `gnosis-chain-dev` is deprecated, use `gnosis-dev` instead
-	$(call CONNECT_TO_NETWORK_IN_DEV_MODE,gnosis-chain,nimbus_beacon_node_gnosis,$(GNOSIS_WEB3_URLS))
-endif
-
-clean-gnosis-chain:
-	$(call CLEAN_NETWORK,gnosis-chain)
-
 ###
 ### libnimbus_lc
 ###

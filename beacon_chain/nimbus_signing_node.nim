@@ -120,8 +120,6 @@ proc new(t: typedesc[SigningNodeRef], config: SigningNodeConf): SigningNodeRef =
       # With `mainnet` compile-time preset, these are not available
       if config.eth2Network == some("minimal"):
         Version [byte 0x00, 0x00, 0x00, 0x01]
-      elif config.eth2Network == some("gnosis"):
-        Version [byte 0x00, 0x00, 0x00, 0x64]
       else:
         config.loadEth2Network().cfg.GENESIS_FORK_VERSION
 

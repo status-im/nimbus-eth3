@@ -1156,9 +1156,7 @@ proc loadEth2Network*(eth2Network: Option[string]): Eth2NetworkMetadata =
     if eth2Network.isSome:
       getMetadataForNetwork(eth2Network.get)
     else:
-      when IsGnosisSupported:
-        getMetadataForNetwork("gnosis")
-      elif IsMainnetSupported:
+      when IsMainnetSupported:
         getMetadataForNetwork("mainnet")
       else:
         # Presumably other configurations can have other defaults, but for now
@@ -1178,7 +1176,7 @@ proc shortNetworkName*(eth2Network: Option[string]): string =
   # network that can be used for directories etc.
   if eth2Network.isSome() and
       eth2Network.get() in
-      ["mainnet", "minimal", "gnosis", "chiado", "hoodi", "sepolia"]:
+      ["mainnet", "minimal"]:
     eth2Network.get()
   else:
     eth2Network.loadEth2Network().cfg.name()

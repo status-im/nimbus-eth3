@@ -35,14 +35,6 @@ eth2_mainnet_genesis_end:
 cdecl(eth2_mainnet_genesis_size):
     .quad    eth2_mainnet_genesis_end - eth2_mainnet_genesis_data
 
-eth2_sepolia_genesis_data:
-    .incbin "sepolia/metadata/genesis.ssz"
-eth2_sepolia_genesis_end:
-    .global cdecl(eth2_sepolia_genesis_size)
-    .p2align 3
-cdecl(eth2_sepolia_genesis_size):
-    .quad    eth2_sepolia_genesis_end - eth2_sepolia_genesis_data
-
 #if defined(__linux__) && (defined(__pie__) || defined(__pic__))
     .section	.data.rel.ro,"aw",@progbits
 #elif defined(__APPLE__)
@@ -53,8 +45,3 @@ cdecl(eth2_sepolia_genesis_size):
     .p2align 3
 cdecl(eth2_mainnet_genesis):
     .quad eth2_mainnet_genesis_data
-
-    .global cdecl(eth2_sepolia_genesis)
-    .p2align 3
-cdecl(eth2_sepolia_genesis):
-    .quad eth2_sepolia_genesis_data
