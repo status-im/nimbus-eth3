@@ -200,16 +200,6 @@
 	url = https://github.com/status-im/nim-toml-serialization.git
 	ignore = untracked
 	branch = master
-[submodule "vendor/gnosis-chain-configs"]
-	path = vendor/gnosis-chain-configs
-	url = https://github.com/gnosischain/configs.git
-	ignore = untracked
-	branch = main
-[submodule "vendor/sepolia"]
-	path = vendor/sepolia
-	url = https://github.com/eth-clients/sepolia.git
-	ignore = untracked
-	branch = main
 [submodule "vendor/nim-kzg4844"]
 	path = vendor/nim-kzg4844
 	url = https://github.com/status-im/nim-kzg4844.git
@@ -224,11 +214,6 @@
 	path = vendor/nim-minilru
 	url = https://github.com/status-im/nim-minilru.git
 	branch = master
-[submodule "vendor/hoodi"]
-	path = vendor/hoodi
-	url = https://github.com/eth-clients/hoodi
-	ignore = untracked
-	branch = main
 [submodule "vendor/nim-ngtcp2"]
 	path = vendor/nim-ngtcp2
 	url = https://github.com/vacp2p/nim-ngtcp2
@@ -240,3 +225,4 @@
 [submodule "vendor/nim-leansig"]
 	path = vendor/nim-leansig
 	url = https://github.com/agnxsh/nim-leansig.git
+  branch = master
