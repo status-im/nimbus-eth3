@@ -237,3 +237,6 @@
 	path = vendor/nim-quic
 	url = https://github.com/vacp2p/nim-quic
 	branch = main
+[submodule "vendor/nim-leansig"]
+	path = vendor/nim-leansig
+	url = https://github.com/agnxsh/nim-leansig.git
