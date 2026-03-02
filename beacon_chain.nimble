@@ -48,8 +48,7 @@ requires(
   "web3",
   "zlib",
   "https://github.com/status-im/nim-kzg4844.git",
-  "zxcvbn",
-  "intops"
+  "zxcvbn"
 )
 
 requires "https://github.com/status-im/nimbus-security-resources.git"

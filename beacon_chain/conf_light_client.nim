@@ -25,11 +25,16 @@ type LightClientConf* = object
     defaultValue: "INFO"
     name: "log-level" .}: string
 
-  logFormat* {.
-    desc: "Choice of log format (auto, colors, nocolors, json)"
+  logStdout* {.
+    hidden
+    desc: "Specifies what kind of logs should be written to stdout (auto, colors, nocolors, json)"
     defaultValueDesc: "auto"
     defaultValue: StdoutLogKind.Auto
     name: "log-format" .}: StdoutLogKind
+
+  logFile* {.
+    desc: "Specifies a path for the written Json log file (deprecated)"
+    name: "log-file" .}: Option[OutFile]
 
   # Storage
   dataDirFlag* {.
@@ -146,10 +151,6 @@ type LightClientConf* = object
     desc: "The wall-time epoch at which to exit the program. (for testing purposes)"
     defaultValue: 0
     name: "debug-stop-at-epoch" .}: uint64
-
-  logFile* {.
-    obsolete: "Logging to file has been deprecated since v1.5.3, see https://nimbus.guide/logging.html#logging-to-a-file"
-    name: "log-file" .}: Option[OutFile]
 
 proc defaultDataDir*(config: LightClientConf): string =
   defaultDataDir("", config.eth2Network.shortNetworkName())

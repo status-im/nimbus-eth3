@@ -10,6 +10,11 @@
 	url = https://github.com/eth-clients/mainnet.git
 	ignore = untracked
 	branch = main
+[submodule "vendor/nim-eth2-scenarios"]
+	path = vendor/nim-eth2-scenarios
+	url = https://github.com/status-im/nim-eth2-scenarios
+	ignore = untracked
+	branch = master
 [submodule "vendor/nim-blscurve"]
 	path = vendor/nim-blscurve
 	url = https://github.com/status-im/nim-blscurve.git
@@ -209,14 +214,15 @@
 	path = vendor/nim-minilru
 	url = https://github.com/status-im/nim-minilru.git
 	branch = master
-[submodule "vendor/nim-lsquic"]
-	path = vendor/nim-lsquic
-	url = https://github.com/vacp2p/nim-lsquic
+[submodule "vendor/nim-ngtcp2"]
+	path = vendor/nim-ngtcp2
+	url = https://github.com/vacp2p/nim-ngtcp2
+	branch = main
+[submodule "vendor/nim-quic"]
+	path = vendor/nim-quic
+	url = https://github.com/vacp2p/nim-quic
 	branch = main
 [submodule "vendor/nim-leansig"]
 	path = vendor/nim-leansig
 	url = https://github.com/agnxsh/nim-leansig.git
   branch = master
-[submodule "vendor/nim-intops"]
-	path = vendor/nim-intops
-	url = https://github.com/vacp2p/nim-intops

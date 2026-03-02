@@ -149,9 +149,11 @@ when defined(windows):
         quit QuitFailure
 
       var config = loadWithBanners(argConfigType, argHelpBanner, argCopyright,
-                                   argVersions, false, environment, setupLogger = true).valueOr:
+                                   argVersions, false, environment).valueOr:
         reportServiceStatus(SERVICE_STOPPED, ERROR_BAD_CONFIGURATION, 0)
         quit QuitFailure
+
+      setupLogging(config.logLevel, config.logStdout, config.logFile)
 
       try:
         argEntryPoint(config)
