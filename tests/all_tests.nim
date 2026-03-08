@@ -59,6 +59,7 @@ import # Unit test
   ./test_zero_signature,
   ./test_signing_node,
   ./consensus_spec/all_tests as consensus_all_tests,
+  ./eth3_scenarios/all_tests as eth3_all_tests,
   ./slashing_protection/test_fixtures,
   ./slashing_protection/test_slashing_protection_db,
   ./test_validator_client,

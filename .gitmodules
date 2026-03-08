@@ -220,3 +220,7 @@
 [submodule "vendor/nim-intops"]
 	path = vendor/nim-intops
 	url = https://github.com/vacp2p/nim-intops
+[submodule "vendor/nim-eth3-scenarios"]
+	path = vendor/nim-eth3-scenarios
+	url = https://github.com/status-im/nim-eth3-scenarios.git
+	branch = master
